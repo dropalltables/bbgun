@@ -81,9 +81,9 @@ export class BBGun extends EventEmitter implements TypedEventEmitter {
             params: this.config.apiKey ? { password: this.config.apiKey } : undefined,
         });
 
-        // BlueBubbles Socket.IO authenticates with { password } in the handshake
+        // BlueBubbles authenticates sockets via query params, not the auth object
         this.socket = io(this.config.serverUrl, {
-            auth: this.config.apiKey ? { password: this.config.apiKey } : undefined,
+            query: this.config.apiKey ? { password: this.config.apiKey } : undefined,
             transports: ["websocket"],
             timeout: 10000,
             forceNew: true,
@@ -244,29 +244,15 @@ export class BBGun extends EventEmitter implements TypedEventEmitter {
             this.logger.error("All reconnection attempts failed");
         });
 
-        this.socket.on("auth-ok", async () => {
-            this.logger.info("Authentication successful");
+        // BlueBubbles authenticates on connect via query params.
+        // If auth fails, the server disconnects immediately — there are no
+        // auth-ok/auth-error events. A successful connect means we're authenticated.
+        this.socket.on("connect", async () => {
+            this.logger.info("Connected to BlueBubbles server");
             if (!this.readyEmitted) {
                 this.readyEmitted = true;
                 await this.recoverMissedMessages();
                 this.emit("ready");
-            }
-        });
-
-        this.socket.on("auth-error", (error: { message: string; reason?: string }) => {
-            this.logger.error(`Authentication failed: ${error.message} ${error.reason ? `(${error.reason})` : ""}`);
-            this.emit("error", new Error(`Authentication failed: ${error.message}`));
-        });
-
-        this.socket.on("connect", async () => {
-            this.logger.info("Connected to BlueBubbles server, waiting for authentication...");
-            if (!this.config.apiKey) {
-                this.logger.info("No password provided, skipping authentication (legacy mode)");
-                if (!this.readyEmitted) {
-                    this.readyEmitted = true;
-                    await this.recoverMissedMessages();
-                    this.emit("ready");
-                }
             }
         });
 
