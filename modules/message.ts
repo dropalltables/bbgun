@@ -3,6 +3,25 @@ import type { AxiosInstance } from "axios";
 import { createChatWithMessage, extractAddress, extractService, isChatNotExistError } from "../lib/auto-create-chat";
 import type { MessageResponse, SendMessageOptions } from "../types";
 
+// BlueBubbles' /message/text endpoint waits up to 2 minutes for delivery
+// confirmation by polling the iMessage database. The matching logic can fail
+// silently (text normalization, timestamp drift, chat GUID mismatches), causing
+// the HTTP response to never arrive even though the message was delivered.
+// We cap the wait and return a synthetic response on timeout.
+const SEND_TIMEOUT_MS = 5000;
+
+async function withSendTimeout<T>(promise: Promise<T>, fallback: () => T): Promise<T> {
+    let timer: ReturnType<typeof setTimeout>;
+    const timeout = new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(fallback()), SEND_TIMEOUT_MS);
+    });
+    try {
+        return await Promise.race([promise, timeout]);
+    } finally {
+        clearTimeout(timer!);
+    }
+}
+
 export class MessageModule {
     constructor(
         private readonly http: AxiosInstance,
@@ -14,9 +33,16 @@ export class MessageModule {
             const tempGuid = options.tempGuid || randomUUID();
             const payload = { ...options, tempGuid };
 
-            try {
+            const doSend = async () => {
                 const response = await this.http.post("/api/v1/message/text", payload);
-                return response.data.data;
+                return response.data.data as MessageResponse;
+            };
+
+            const fallback = () =>
+                ({ guid: tempGuid, tempGuid, text: options.message, dateCreated: Date.now() }) as MessageResponse;
+
+            try {
+                return await withSendTimeout(doSend(), fallback);
             } catch (error: unknown) {
                 if (!isChatNotExistError(error)) throw error;
 
@@ -34,7 +60,7 @@ export class MessageModule {
                     effectId: options.effectId,
                     service,
                 });
-                return { guid: tempGuid, text: options.message, dateCreated: Date.now() } as MessageResponse;
+                return fallback();
             }
         });
     }
@@ -124,12 +150,28 @@ export class MessageModule {
         partIndex?: number;
     }): Promise<MessageResponse> {
         return this.enqueueSend(async () => {
-            const response = await this.http.post(`/api/v1/message/${encodeURIComponent(options.messageGuid)}/edit`, {
-                editedMessage: options.editedMessage,
-                backwardsCompatibilityMessage: options.backwardsCompatibilityMessage || options.editedMessage,
-                partIndex: options.partIndex ?? 0,
-            });
-            return response.data.data;
+            const doEdit = async () => {
+                const response = await this.http.post(
+                    `/api/v1/message/${encodeURIComponent(options.messageGuid)}/edit`,
+                    {
+                        editedMessage: options.editedMessage,
+                        backwardsCompatibilityMessage:
+                            options.backwardsCompatibilityMessage || options.editedMessage,
+                        partIndex: options.partIndex ?? 0,
+                    },
+                );
+                return response.data.data as MessageResponse;
+            };
+
+            return withSendTimeout(
+                doEdit(),
+                () =>
+                    ({
+                        guid: options.messageGuid,
+                        text: options.editedMessage,
+                        dateEdited: Date.now(),
+                    }) as MessageResponse,
+            );
         });
     }
 
@@ -140,22 +182,46 @@ export class MessageModule {
         partIndex?: number;
     }): Promise<MessageResponse> {
         return this.enqueueSend(async () => {
-            const response = await this.http.post("/api/v1/message/react", {
-                chatGuid: options.chatGuid,
-                selectedMessageGuid: options.messageGuid,
-                reaction: options.reaction,
-                partIndex: options.partIndex ?? 0,
-            });
-            return response.data.data;
+            const doReact = async () => {
+                const response = await this.http.post("/api/v1/message/react", {
+                    chatGuid: options.chatGuid,
+                    selectedMessageGuid: options.messageGuid,
+                    reaction: options.reaction,
+                    partIndex: options.partIndex ?? 0,
+                });
+                return response.data.data as MessageResponse;
+            };
+
+            return withSendTimeout(
+                doReact(),
+                () =>
+                    ({
+                        guid: randomUUID(),
+                        associatedMessageGuid: options.messageGuid,
+                        dateCreated: Date.now(),
+                    }) as MessageResponse,
+            );
         });
     }
 
     async unsendMessage(options: { messageGuid: string; partIndex?: number }): Promise<MessageResponse> {
         return this.enqueueSend(async () => {
-            const response = await this.http.post(`/api/v1/message/${encodeURIComponent(options.messageGuid)}/unsend`, {
-                partIndex: options.partIndex ?? 0,
-            });
-            return response.data.data;
+            const doUnsend = async () => {
+                const response = await this.http.post(
+                    `/api/v1/message/${encodeURIComponent(options.messageGuid)}/unsend`,
+                    { partIndex: options.partIndex ?? 0 },
+                );
+                return response.data.data as MessageResponse;
+            };
+
+            return withSendTimeout(
+                doUnsend(),
+                () =>
+                    ({
+                        guid: options.messageGuid,
+                        dateRetracted: Date.now(),
+                    }) as MessageResponse,
+            );
         });
     }
 
