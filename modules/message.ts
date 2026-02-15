@@ -11,14 +11,22 @@ import type { MessageResponse, SendMessageOptions } from "../types";
 const SEND_TIMEOUT_MS = 5000;
 
 async function withSendTimeout<T>(promise: Promise<T>, fallback: () => T): Promise<T> {
+    // Swallow late rejections — if the timeout wins and the HTTP request
+    // eventually errors (e.g. BB's 2-minute timeout expires), the rejection
+    // would otherwise be unhandled.
+    const safe = promise.catch(() => fallback());
+
     let timer: ReturnType<typeof setTimeout>;
     const timeout = new Promise<T>((resolve) => {
         timer = setTimeout(() => resolve(fallback()), SEND_TIMEOUT_MS);
     });
     try {
+        // Race the raw promise (not safe) so fast errors still throw
         return await Promise.race([promise, timeout]);
     } finally {
         clearTimeout(timer!);
+        // Keep the safe chain alive so late rejections don't crash the process
+        void safe;
     }
 }
 
