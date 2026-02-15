@@ -1,0 +1,61 @@
+{
+    "name": "bbgun",
+    "version": "0.1.0",
+    "description": "Drop-in replacement for @photon-ai/advanced-imessage-kit using BlueBubbles Server",
+    "keywords": [
+        "imessage",
+        "bluebubbles",
+        "sdk",
+        "typescript",
+        "macos",
+        "messaging"
+    ],
+    "license": "AGPL-3.0",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        }
+    },
+    "sideEffects": false,
+    "module": "./dist/index.js",
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "types": "./dist/index.d.ts",
+    "private": false,
+    "engines": {
+        "node": ">=18.0.0"
+    },
+    "files": [
+        "dist/",
+        "README.md",
+        "LICENSE"
+    ],
+    "devDependencies": {
+        "@biomejs/biome": "^2.3.3",
+        "@types/bun": "latest",
+        "tsup": "^8.3.5"
+    },
+    "scripts": {
+        "format": "bunx @biomejs/biome check . --write",
+        "lint": "bunx @biomejs/biome check .",
+        "type-check": "bunx tsc --noEmit",
+        "build": "bunx tsup",
+        "test": "echo \"No tests specified\" && exit 0",
+        "prepublishOnly": "bun run format && bun run lint && bun run type-check && bun run build"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    },
+    "dependencies": {
+        "axios": "^1.13.2",
+        "form-data": "^4.0.4",
+        "socket.io-client": "^4.8.1"
+    }
+}
