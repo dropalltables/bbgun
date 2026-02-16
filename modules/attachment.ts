@@ -47,8 +47,7 @@ export class AttachmentModule {
     }
 
     async downloadAttachmentLive(guid: string): Promise<Buffer> {
-        // BlueBubbles uses /download/live instead of /live
-        const response = await this.http.get(`/api/v1/attachment/${encodeURIComponent(guid)}/download/live`, {
+        const response = await this.http.get(`/api/v1/attachment/${encodeURIComponent(guid)}/live`, {
             responseType: "arraybuffer",
         });
         return Buffer.from(response.data);

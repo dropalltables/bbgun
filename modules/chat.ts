@@ -146,39 +146,4 @@ export class ChatModule {
         await this.http.delete(`/api/v1/chat/${encodeURIComponent(chatGuid)}/typing`);
     }
 
-    async getBackground(chatGuid: string): Promise<{
-        hasBackground: boolean;
-        backgroundChannelGUID?: string | null;
-        imageUrl?: string | null;
-        backgroundId?: string | null;
-    }> {
-        const response = await this.http.get(`/api/v1/chat/${encodeURIComponent(chatGuid)}/background`);
-        return response.data.data;
-    }
-
-    async setBackground(
-        chatGuid: string,
-        options: string | { imageUrl?: string; filePath?: string; fileData?: string },
-    ): Promise<void> {
-        let body: { imageUrl?: string; fileData?: string };
-
-        if (typeof options === "string") {
-            body = { imageUrl: options };
-        } else if (options.filePath) {
-            const fileBuffer = await readFile(options.filePath);
-            body = { fileData: fileBuffer.toString("base64") };
-        } else if (options.fileData) {
-            body = { fileData: options.fileData };
-        } else if (options.imageUrl) {
-            body = { imageUrl: options.imageUrl };
-        } else {
-            throw new Error("Either filePath, fileData, or imageUrl must be provided");
-        }
-
-        await this.http.post(`/api/v1/chat/${encodeURIComponent(chatGuid)}/background`, body);
-    }
-
-    async removeBackground(chatGuid: string): Promise<void> {
-        await this.http.delete(`/api/v1/chat/${encodeURIComponent(chatGuid)}/background`);
-    }
 }
