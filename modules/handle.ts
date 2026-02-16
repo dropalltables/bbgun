@@ -12,7 +12,7 @@ export class HandleModule {
         data: any[];
         metadata: { total: number; offset: number; limit: number; count: number };
     }> {
-        const body: Record<string, any> = {};
+        const body: Record<string, any> = { offset: 0 };
         if (options?.address) body.address = options.address;
         if (options?.with) body.with = options.with.join(",");
         if (options?.offset !== undefined) body.offset = options.offset;

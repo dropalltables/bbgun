@@ -39,7 +39,11 @@ export class MessageModule {
     async sendMessage(options: SendMessageOptions): Promise<MessageResponse> {
         return this.enqueueSend(async () => {
             const tempGuid = options.tempGuid || randomUUID();
-            const payload = { ...options, tempGuid };
+            const payload = {
+                ...options,
+                tempGuid,
+                ...(options.selectedMessageGuid && { method: "private-api" }),
+            };
 
             const doSend = async () => {
                 const response = await this.http.post("/api/v1/message/text", payload);
@@ -119,7 +123,7 @@ export class MessageModule {
         maxRowId?: number;
     }): Promise<number> {
         const params: Record<string, unknown> = {};
-        if (options?.after !== undefined) params.after = options.after;
+        params.after = options?.after ?? 0;
         if (options?.before !== undefined) params.before = options.before;
         if (options?.chatGuid) params.chatGuid = options.chatGuid;
         if (options?.minRowId !== undefined) params.minRowId = options.minRowId;

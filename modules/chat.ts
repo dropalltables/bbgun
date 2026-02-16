@@ -142,8 +142,4 @@ export class ChatModule {
         await this.http.post(`/api/v1/chat/${encodeURIComponent(chatGuid)}/typing`);
     }
 
-    async stopTyping(chatGuid: string): Promise<void> {
-        await this.http.delete(`/api/v1/chat/${encodeURIComponent(chatGuid)}/typing`);
-    }
-
 }
