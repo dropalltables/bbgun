@@ -1,6 +1,6 @@
 {
     "name": "bbgun",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Drop-in replacement for @photon-ai/advanced-imessage-kit using BlueBubbles Server",
     "keywords": [
         "imessage",
