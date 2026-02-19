@@ -167,8 +167,7 @@ export class MessageModule {
                     `/api/v1/message/${encodeURIComponent(options.messageGuid)}/edit`,
                     {
                         editedMessage: options.editedMessage,
-                        backwardsCompatibilityMessage:
-                            options.backwardsCompatibilityMessage || options.editedMessage,
+                        backwardsCompatibilityMessage: options.backwardsCompatibilityMessage || options.editedMessage,
                         partIndex: options.partIndex ?? 0,
                     },
                 );

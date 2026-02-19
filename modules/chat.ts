@@ -141,5 +141,4 @@ export class ChatModule {
     async startTyping(chatGuid: string): Promise<void> {
         await this.http.post(`/api/v1/chat/${encodeURIComponent(chatGuid)}/typing`);
     }
-
 }

@@ -11,7 +11,6 @@ import {
     HandleModule,
     ICloudModule,
     MessageModule,
-
     ScheduledMessageModule,
     ServerModule,
 } from "./modules";
@@ -46,7 +45,6 @@ export class BBGun extends EventEmitter implements TypedEventEmitter {
 
     public readonly facetime: FaceTimeModule;
     public readonly icloud: ICloudModule;
-
 
     public readonly scheduledMessages: ScheduledMessageModule;
     public readonly server: ServerModule;
@@ -105,7 +103,6 @@ export class BBGun extends EventEmitter implements TypedEventEmitter {
 
         this.facetime = new FaceTimeModule(this.http);
         this.icloud = new ICloudModule(this.http);
-
 
         this.scheduledMessages = new ScheduledMessageModule(this.http);
         this.server = new ServerModule(this.http);
