@@ -5,8 +5,8 @@ on:
     types: [published]
 
 permissions:
-  contents: read
   id-token: write
+  contents: read
 
 jobs:
   publish:
@@ -20,6 +20,4 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: bun install --frozen-lockfile
       - run: bun run build
-      - run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ""
+      - run: npm publish
