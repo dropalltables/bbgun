@@ -1,8 +1,8 @@
-import type { AxiosInstance } from "axios";
+import type { HttpClient } from "../lib/http";
 import type { FindMyLocationItem } from "../types/findmy";
 
 export class ICloudModule {
-    constructor(private readonly http: AxiosInstance) {}
+    constructor(private readonly http: HttpClient) {}
 
     async getFindMyFriends(): Promise<FindMyLocationItem[]> {
         const response = await this.http.get("/api/v1/icloud/findmy/friends");

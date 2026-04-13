@@ -1,7 +1,7 @@
-import type { AxiosInstance } from "axios";
+import type { HttpClient } from "../lib/http";
 
 export class ContactModule {
-    constructor(private readonly http: AxiosInstance) {}
+    constructor(private readonly http: HttpClient) {}
 
     async getContacts(): Promise<any[]> {
         const response = await this.http.get("/api/v1/contact");

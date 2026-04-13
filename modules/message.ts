@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import type { AxiosInstance } from "axios";
 import { createChatWithMessage, extractAddress, extractService, isChatNotExistError } from "../lib/auto-create-chat";
+import type { HttpClient } from "../lib/http";
 import type { MessageResponse, SendMessageOptions } from "../types";
 
 // BlueBubbles' /message/text endpoint waits up to 2 minutes for delivery
@@ -32,7 +32,7 @@ async function withSendTimeout<T>(promise: Promise<T>, fallback: () => T): Promi
 
 export class MessageModule {
     constructor(
-        private readonly http: AxiosInstance,
+        private readonly http: HttpClient,
         private readonly enqueueSend: <T>(task: () => Promise<T>) => Promise<T> = (task) => task(),
     ) {}
 

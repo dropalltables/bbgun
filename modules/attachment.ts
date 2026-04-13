@@ -1,14 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { AxiosInstance } from "axios";
-import FormData from "form-data";
 import { extractAddress, extractService, isChatNotExistError } from "../lib/auto-create-chat";
+import type { HttpClient } from "../lib/http";
 import type { AttachmentResponse, MessageResponse, SendAttachmentOptions, SendStickerOptions } from "../types";
 
 export class AttachmentModule {
     constructor(
-        private readonly http: AxiosInstance,
+        private readonly http: HttpClient,
         private readonly enqueueSend: <T>(task: () => Promise<T>) => Promise<T> = (task) => task(),
     ) {}
 
@@ -90,7 +89,7 @@ export class AttachmentModule {
             const buildForm = () => {
                 const form = new FormData();
                 form.append("chatGuid", options.chatGuid);
-                form.append("attachment", fileBuffer, fileName);
+                form.append("attachment", new Blob([fileBuffer]), fileName);
                 form.append("name", fileName);
                 form.append("tempGuid", tempGuid);
                 if (options.isAudioMessage !== undefined) {
@@ -107,9 +106,7 @@ export class AttachmentModule {
 
             try {
                 const form = buildForm();
-                const response = await this.http.post("/api/v1/message/attachment", form, {
-                    headers: form.getHeaders(),
-                });
+                const response = await this.http.post("/api/v1/message/attachment", form);
                 return response.data.data;
             } catch (error: unknown) {
                 if (!isChatNotExistError(error)) throw error;
@@ -117,9 +114,7 @@ export class AttachmentModule {
                 await this.ensureChatExists(options.chatGuid);
 
                 const form = buildForm();
-                const response = await this.http.post("/api/v1/message/attachment", form, {
-                    headers: form.getHeaders(),
-                });
+                const response = await this.http.post("/api/v1/message/attachment", form);
                 return response.data.data;
             }
         });
@@ -132,7 +127,7 @@ export class AttachmentModule {
 
             const buildForm = () => {
                 const form = new FormData();
-                form.append("attachment", fileBuffer, fileName);
+                form.append("attachment", new Blob([fileBuffer]), fileName);
                 form.append("name", fileName);
                 form.append("chatGuid", options.chatGuid);
                 form.append("isSticker", "true");
@@ -151,9 +146,7 @@ export class AttachmentModule {
 
             try {
                 const form = buildForm();
-                const { data } = await this.http.post("/api/v1/message/attachment", form, {
-                    headers: form.getHeaders(),
-                });
+                const { data } = await this.http.post("/api/v1/message/attachment", form);
                 return data.data;
             } catch (error: unknown) {
                 if (!isChatNotExistError(error)) throw error;
@@ -161,9 +154,7 @@ export class AttachmentModule {
                 await this.ensureChatExists(options.chatGuid);
 
                 const form = buildForm();
-                const { data } = await this.http.post("/api/v1/message/attachment", form, {
-                    headers: form.getHeaders(),
-                });
+                const { data } = await this.http.post("/api/v1/message/attachment", form);
                 return data.data;
             }
         });

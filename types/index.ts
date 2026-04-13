@@ -6,7 +6,6 @@ export * from "./facetime";
 export * from "./findmy";
 export * from "./handle";
 export * from "./message";
-
 export * from "./scheduled";
 export * from "./server";
 export * from "./sticker";

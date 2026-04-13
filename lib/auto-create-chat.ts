@@ -1,8 +1,13 @@
-import type { AxiosInstance } from "axios";
+import type { HttpClient } from "./http";
 
 export function isChatNotExistError(error: unknown): boolean {
-    const axiosError = error as { response?: { data?: { error?: { message?: string }; message?: string } } };
-    const errorMsg = axiosError?.response?.data?.error?.message || axiosError?.response?.data?.message || "";
+    if (!(error instanceof Error)) return false;
+    const response = (error as { response?: { data?: unknown } }).response;
+    if (!response?.data || typeof response.data !== "object") return false;
+    const data = response.data as Record<string, unknown>;
+    const nested =
+        typeof data.error === "object" && data.error !== null ? (data.error as Record<string, unknown>) : null;
+    const errorMsg = String(nested?.message ?? data.message ?? "");
     const lowerMsg = errorMsg.toLowerCase();
     return lowerMsg.includes("chat does not exist") || lowerMsg.includes("chat not found");
 }
@@ -24,7 +29,7 @@ export function extractService(chatGuid: string): "iMessage" | "SMS" | undefined
 }
 
 export async function createChatWithMessage(options: {
-    http: AxiosInstance;
+    http: HttpClient;
     address: string;
     message: string;
     tempGuid?: string;

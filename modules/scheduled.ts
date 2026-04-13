@@ -1,7 +1,7 @@
-import type { AxiosInstance } from "axios";
+import type { HttpClient } from "../lib/http";
 
 export class ScheduledMessageModule {
-    constructor(private readonly http: AxiosInstance) {}
+    constructor(private readonly http: HttpClient) {}
 
     async createScheduledMessage(options: any): Promise<any> {
         const response = await this.http.post("/api/v1/message/schedule", options);

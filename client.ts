@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events";
-import axios, { type AxiosInstance } from "axios";
 import io from "socket.io-client";
+import { createHttpClient, type HttpClient } from "./lib/http";
 import { getLogger, setGlobalLogLevel, setGlobalLogToFile } from "./lib/Loggable";
 import type { LogLevel } from "./lib/Logger";
 import {
@@ -33,7 +33,7 @@ export class BBGun extends EventEmitter implements TypedEventEmitter {
 
     public readonly config: ClientConfig;
     public readonly logger = getLogger("BBGun");
-    public readonly http: AxiosInstance;
+    public readonly http: HttpClient;
     public readonly socket: ReturnType<typeof io>;
 
     public readonly attachments: AttachmentModule;
@@ -74,10 +74,10 @@ export class BBGun extends EventEmitter implements TypedEventEmitter {
         }
 
         // BlueBubbles authenticates REST requests via a `password` query parameter
-        this.http = axios.create({
-            baseURL: this.config.serverUrl,
-            params: this.config.apiKey ? { password: this.config.apiKey } : undefined,
-        });
+        this.http = createHttpClient(
+            this.config.serverUrl,
+            this.config.apiKey ? { password: this.config.apiKey } : undefined,
+        );
 
         // BlueBubbles authenticates sockets via query params, not the auth object
         this.socket = io(this.config.serverUrl, {

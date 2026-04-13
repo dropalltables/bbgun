@@ -5,6 +5,18 @@ import * as path from "node:path";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
+function getLogDir(): string {
+    const home = os.homedir();
+    switch (process.platform) {
+        case "darwin":
+            return path.join(home, "Library", "Logs", "BBGun");
+        case "win32":
+            return path.join(process.env.LOCALAPPDATA ?? path.join(home, "AppData", "Local"), "BBGun", "logs");
+        default:
+            return path.join(process.env.XDG_STATE_HOME ?? path.join(home, ".local", "state"), "bbgun");
+    }
+}
+
 export class Logger extends EventEmitter {
     tag: string;
     private logLevel: LogLevel = "info";
@@ -17,7 +29,7 @@ export class Logger extends EventEmitter {
 
         if (logToFile) {
             try {
-                const logDir = path.join(os.homedir(), "Library", "Logs", "BBGun");
+                const logDir = getLogDir();
                 if (!fs.existsSync(logDir)) {
                     fs.mkdirSync(logDir, { recursive: true });
                 }

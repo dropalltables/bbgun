@@ -10,5 +10,5 @@ export default defineConfig({
     treeshake: true,
     target: "es2020",
     outDir: "dist",
-    external: ["axios", "form-data", "socket.io-client"],
+    external: ["socket.io-client"],
 });

@@ -1,11 +1,10 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { AxiosInstance } from "axios";
-import FormData from "form-data";
+import type { HttpClient } from "../lib/http";
 import type { ChatResponse, MessageResponse } from "../types";
 
 export class ChatModule {
-    constructor(private readonly http: AxiosInstance) {}
+    constructor(private readonly http: HttpClient) {}
 
     async getChats(options?: {
         withLastMessage?: boolean;
@@ -110,11 +109,9 @@ export class ChatModule {
         const fileBuffer = await readFile(filePath);
         const fileName = path.basename(filePath);
         const form = new FormData();
-        form.append("icon", fileBuffer, fileName);
+        form.append("icon", new Blob([fileBuffer]), fileName);
 
-        await this.http.post(`/api/v1/chat/${encodeURIComponent(chatGuid)}/icon`, form, {
-            headers: form.getHeaders(),
-        });
+        await this.http.post(`/api/v1/chat/${encodeURIComponent(chatGuid)}/icon`, form);
     }
 
     async removeGroupIcon(chatGuid: string): Promise<void> {
